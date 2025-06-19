@@ -1,184 +1,98 @@
-import React, { useState } from "react";
-import ProfileHeader from "../components/profile/ProfileHeader";
-import ProfileCard from "../components/profile/ProfileCard";
-import FactsGrid from "../components/profile/FactsGrid";
-import RatingGraph from "../components/charts/RatingGraph";
-import SubmissionHeatmap from "../components/charts/SubmissionHeatmap";
-import LanguagesPie from "../components/charts/LanguagesPie";
-import VerdictPie from "../components/charts/VerdictPie";
-import TagsPie from "../components/charts/TagsPie";
-import RatingWiseBarChart from "../components/charts/RatingWiseBarChart";
-import SectionContainer from "../components/ui/SectionContainer";
-import LoadingSkeleton from "../components/ui/LoadingSkeleton";
-import ErrorMessage from "../components/ui/ErrorMessage";
+import React from 'react';
+import { useParams } from 'react-router-dom';
+import useUserData from '@/hooks/useUserData';
+import useContests from '@/hooks/useContests';
+import useSubmissions from '@/hooks/useSubmissions';
+import getProfileStats from '@/utils/profile-stats';
+import ProfileCard from '@/components/profile/ProfileCard';
+import FactsGrid from '@/components/profile/FactsGrid';
+import RatingGraph from '@/components/charts/RatingGraph';
+import SubmissionHeatmap from '@/components/charts/SubmissionHeatmap';
+import LanguagesPie from '@/components/charts/LanguagesPie';
+import TagsPie from '@/components/charts/TagsPie';
+import VerdictPie from '@/components/charts/VerdictPie';
+import RatingWiseBarChart from '@/components/charts/RatingWiseBarChart';
+import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
+import ErrorMessage from '@/components/ui/ErrorMessage';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import useUserData from "../hooks/useUserData";
-import useSubmissions from "../hooks/useSubmissions";
-import useContests from "../hooks/useContests";
+export default function SingleProfile({ submittedHandle }) {
+  const { handle: routeHandle } = useParams();
+  const handle = submittedHandle || routeHandle;
 
-import {
-  getTotalSolved,
-  formatDate,
-} from "../utils/profile-stats";
-import {
-  formatLanguagesData,
-  formatVerdictsData,
-  formatTagsData,
-  formatRatingWiseData,
-  formatHeatmapData,
-} from "../utils/chart-formatters";
+  const { data: userData, isLoading: isUserLoading, error: userError } = useUserData(handle);
+  const { data: contests, isLoading: isContestsLoading, error: contestsError } = useContests(handle);
+  const { data: submissions, isLoading: isSubmissionsLoading, error: submissionsError } = useSubmissions(handle);
 
-export default function SingleProfile() {
-  const [handle, setHandle] = useState("");
-  const [submittedHandle, setSubmittedHandle] = useState("");
-  const [formError, setFormError] = useState(null);
+  const isLoading = isUserLoading || isContestsLoading || isSubmissionsLoading;
+  const error = userError || contestsError || submissionsError;
 
-  // Data fetching hooks
-  const { user, loading: userLoading, error: userError } = useUserData(submittedHandle);
-  const { submissions, loading: subsLoading, error: subsError } = useSubmissions(submittedHandle);
-  const { contests, ratingChanges, loading: contestsLoading, error: contestsError } = useContests(submittedHandle);
+  if (isLoading) return <LoadingSkeleton />;
+  if (error) return <ErrorMessage message={error.message} />;
+  if (!userData || !contests || !submissions) return null;
 
-  const isLoading = userLoading; // Primary loading state is for the user data
-  const hasLoadedUserData = !!user && !userLoading && !userError;
-
-  // Derived stats for FactsGrid
-  const facts = hasLoadedUserData && contests && submissions
-    ? {
-        contests: contests.length,
-        bestRank: contests.length ? Math.min(...contests.map(c => c.rank)) : "-",
-        worstRank: contests.length ? Math.max(...contests.map(c => c.rank)) : "-",
-        totalSolved: getTotalSolved(submissions),
-        firstContest: contests.length && contests[0]?.date ? formatDate(contests[0].date) : "-",
-        lastContest: contests.length && contests[contests.length - 1]?.date ? formatDate(contests[contests.length - 1].date) : "-",
-      }
-    : null;
-
-  // Chart data formatters - ensure data exists before formatting
-  const heatmapData = submissions ? formatHeatmapData(submissions) : [];
-  const languagesData = submissions ? formatLanguagesData(submissions, 6) : [];
-  const verdictsData = submissions ? formatVerdictsData(submissions) : [];
-  const tagsData = submissions ? formatTagsData(submissions, 8) : [];
-  const ratingBarData = submissions ? formatRatingWiseData(submissions) : [];
-
-  // Form submit handler
-  function handleSubmit(e) {
-    e.preventDefault();
-    const trimmed = handle.trim();
-    if (!trimmed) {
-      setFormError("Please enter a Codeforces handle.");
-      setSubmittedHandle("");
-      return;
-    }
-    setFormError(null);
-    setSubmittedHandle(trimmed);
-  }
-
-  function handleInputChange(e) {
-    setHandle(e.target.value);
-    if (e.target.value.trim() === "") {
-        setSubmittedHandle("");
-        setFormError(null);
-    }
-  }
+  const stats = getProfileStats(userData, contests, submissions);
 
   return (
-    <div className="pb-12 px-4 md:px-6 lg:px-8">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-xl mx-auto mt-8 mb-6 flex gap-2"
-        autoComplete="off"
-      >
-        <input
-          type="text"
-          placeholder="Enter Codeforces handle"
-          className="flex-1 px-4 py-2 rounded-l-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={handle}
-          onChange={handleInputChange}
-          required
-        />
-        <button
-          type="submit"
-          className="px-6 py-2 rounded-r-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
-        >
-          Show Profile
-        </button>
-      </form>
+    <div className="space-y-8">
+      <ProfileCard user={userData} />
+      <FactsGrid stats={stats.facts} />
+      
+      <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <CardHeader>
+          <CardTitle className="text-xl text-gray-900 font-semibold">Rating History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RatingGraph data={contests} />
+        </CardContent>
+      </Card>
+      
+      <div className="grid md:grid-cols-2 gap-8">
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <CardHeader>
+            <CardTitle className="text-xl text-gray-900 font-semibold">Problem Tags</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TagsPie data={submissions} />
+          </CardContent>
+        </Card>
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <CardHeader>
+            <CardTitle className="text-xl text-gray-900 font-semibold">Verdicts</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <VerdictPie data={submissions} />
+          </CardContent>
+        </Card>
+      </div>
 
-      {formError && <ErrorMessage message={formError} />}
-      {userError && <ErrorMessage message={userError} />}
+      <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <CardHeader>
+          <CardTitle className="text-xl text-gray-900 font-semibold">Submissions Heatmap</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <SubmissionHeatmap data={submissions} />
+        </CardContent>
+      </Card>
 
-      {isLoading && (
-        <SectionContainer>
-          <LoadingSkeleton lines={8} />
-        </SectionContainer>
-      )}
-
-      {hasLoadedUserData ? (
-        <>
-          <div className="px-4 md:px-6 lg:px-8">
-            <ProfileHeader handle={user.handle} tagline="Visualizing your Codeforces journey" />
-          </div>
-          <SectionContainer>
-            <ProfileCard user={user} />
-          </SectionContainer>
-
-          <SectionContainer>
-            <p className="text-sm text-center text-gray-500 italic">
-              Note: To ensure a smooth experience and avoid API limits, all statistics are based on the last 2000 submissions.
-            </p>
-          </SectionContainer>
-
-          {contestsLoading ? <LoadingSkeleton lines={3} /> : contestsError ? <ErrorMessage message={contestsError} /> : facts && (
-            <SectionContainer>
-              <FactsGrid stats={facts} />
-            </SectionContainer>
-          )}
-
-          {contestsLoading ? <LoadingSkeleton lines={6} /> : contestsError ? <ErrorMessage message={contestsError} /> : ratingChanges && (
-            <SectionContainer title="Rating Changes Over Time">
-              <RatingGraph data={ratingChanges} />
-            </SectionContainer>
-          )}
-
-          {subsLoading ? <LoadingSkeleton lines={6} /> : subsError ? <ErrorMessage message={subsError} /> : heatmapData && (
-            <SectionContainer title="Submission Activity Heatmap">
-              <SubmissionHeatmap submissions={heatmapData} />
-            </SectionContainer>
-          )}
-
-          <div className="grid md:grid-cols-3 gap-4 px-4 md:px-6 lg:px-8">
-            {subsLoading ? <LoadingSkeleton lines={5} /> : subsError ? <ErrorMessage message={subsError} /> : languagesData && (
-              <SectionContainer title="Languages Used">
-                <LanguagesPie data={languagesData} />
-              </SectionContainer>
-            )}
-            {subsLoading ? <LoadingSkeleton lines={5} /> : subsError ? <ErrorMessage message={subsError} /> : verdictsData && (
-              <SectionContainer title="Verdicts Distribution">
-                <VerdictPie data={verdictsData} />
-              </SectionContainer>
-            )}
-            {subsLoading ? <LoadingSkeleton lines={5} /> : subsError ? <ErrorMessage message={subsError} /> : tagsData && (
-              <SectionContainer title="Tags Distribution">
-                <TagsPie data={tagsData} />
-              </SectionContainer>
-            )}
-          </div>
-          
-          {subsLoading ? <LoadingSkeleton lines={6} /> : subsError ? <ErrorMessage message={subsError} /> : ratingBarData && (
-            <SectionContainer title="Problems Solved by Rating">
-              <RatingWiseBarChart data={ratingBarData} />
-            </SectionContainer>
-          )}
-        </>
-      ) : (
-        !submittedHandle && !isLoading && !userError && (
-          <SectionContainer>
-            <div className="text-center text-gray-400 dark:text-gray-600 py-8">
-              Enter a Codeforces handle to view profile statistics.
-            </div>
-          </SectionContainer>
-        )
-      )}
+      <div className="grid md:grid-cols-2 gap-8">
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <CardHeader>
+            <CardTitle className="text-xl text-gray-900 font-semibold">Languages</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LanguagesPie data={submissions} />
+          </CardContent>
+        </Card>
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+          <CardHeader>
+            <CardTitle className="text-xl text-gray-900 font-semibold">Rating-wise Problem Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RatingWiseBarChart data={submissions} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -1,60 +1,34 @@
+import React from "react";
+import { Button } from "@/components/ui/button";
+import ShineBorder from "@/components/magic-ui/shine-border";
+import { FaGithub } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 
 export default function Navbar() {
   const location = useLocation();
 
   return (
-    <nav className="w-full bg-white dark:bg-gray-900 shadow">
-      {/* Adjusted px for smaller screens, then scales up */}
-      <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-4">
-          {/* Title - Adjust font size and add right margin for spacing */}
-          <Link
-            to="/"
-            className="
-              text-base sm:text-xl font-bold /* Base is smaller, sm is larger */
-              text-gray-900 dark:text-white
-              mr-2 sm:mr-6 flex-shrink-0 whitespace-nowrap /* Adjust margin for sm and up */
-            "
+    <nav className="container mx-auto px-6 py-6 flex justify-between items-center">
+      <h1 className="text-3xl font-bold text-white">CF Visualizer</h1>
+      <a
+        href="https://github.com/ResorcinolWorks/cf-visualizer"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <ShineBorder 
+          shineColor="#3b82f6" 
+          duration={2}
+          borderWidth={2}
+        >
+          <Button 
+            variant="ghost" 
+            className="text-white hover:bg-gray-800 border-0 px-6 py-3 rounded-full transition-colors"
           >
-            Codeforces Visualizer
-          </Link>
-
-          {/* Nav Links - Adjust gap for smaller screens and prevent wrapping */}
-          <div className="flex gap-4 sm:gap-6"> {/* Reduced gap on smaller screens */}
-            <Link
-              to="/"
-              className={`
-                font-semibold transition-colors whitespace-nowrap
-                text-sm sm:text-base /* Smaller font on very small screens, base from sm */
-                ${
-                  location.pathname === "/"
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-gray-700 dark:text-gray-200"
-                }
-                hover:underline
-              `}
-            >
-              Single Profile
-            </Link>
-            <Link
-              to="/compare"
-              className={`
-                font-semibold transition-colors whitespace-nowrap
-                text-sm sm:text-base /* Smaller font on very small screens, base from sm */
-                ${
-                  location.pathname === "/compare"
-                    ? "text-blue-600 dark:text-blue-400"
-                    : "text-gray-700 dark:text-gray-200"
-                }
-                hover:underline
-              `}
-            >
-              Compare Profiles
-            </Link>
-          </div>
-        </div>
-      </div>
+            <FaGithub className="mr-2 h-5 w-5" />
+            Star on GitHub
+          </Button>
+        </ShineBorder>
+      </a>
     </nav>
   );
 }

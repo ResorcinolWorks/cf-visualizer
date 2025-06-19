@@ -1,5 +1,6 @@
 // src/components/charts/RatingWiseBarChart.jsx
 
+import React, { useMemo } from 'react';
 import {
   BarChart,
   Bar,
@@ -8,8 +9,9 @@ import {
   Tooltip,
   ResponsiveContainer,
   CartesianGrid,
-  LabelList,
+  Legend,
 } from "recharts";
+import { formatRatingWiseData } from '@/utils/chart-formatters';
 
 // Tailwind-inspired color for bars
 const BAR_COLOR = "#2563eb"; // blue-600
@@ -29,62 +31,32 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-export default function RatingWiseBarChart({ data }) {
-  // data: [{ rating: 800, count: 12 }, { rating: 900, count: 15 }, ...]
-  if (!data || !data.length) {
-    return (
-      <div className="w-full h-64 flex items-center justify-center bg-white dark:bg-gray-900 rounded-xl shadow mt-6">
-        <span className="text-gray-400 dark:text-gray-600">No rating-wise problem data available.</span>
-      </div>
-    );
+const RatingWiseBarChart = ({ data }) => {
+  const chartData = useMemo(() => formatRatingWiseData(data), [data]);
+
+  if (!chartData || chartData.length === 0) {
+    return <p className="text-center text-gray-600">No data available.</p>;
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-xl shadow p-4 mt-6">
-        <div className="overflow-x-auto">
-        <div className="min-w-[700px]">
-            <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 30 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis
-                dataKey="rating"
-                tick={{ fill: "#6b7280", fontSize: 12 }}
-                angle={-45}
-                textAnchor="end"
-                interval={0}
-                label={{
-                    value: "Problem Rating",
-                    position: "insideBottom",
-                    offset: -18,
-                    fill: "#6b7280",
-                    fontSize: 14,
-                }}
-                />
-                <YAxis
-                tick={{ fill: "#6b7280", fontSize: 12 }}
-                allowDecimals={false}
-                label={{
-                    value: "Solved",
-                    angle: -90,
-                    position: "insideLeft",
-                    fill: "#6b7280",
-                    fontSize: 14,
-                }}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" fill={BAR_COLOR} radius={[6, 6, 0, 0]}>
-                <LabelList
-                    dataKey="count"
-                    position="top"
-                    fill="#2563eb"
-                    fontWeight="bold"
-                    fontSize={10}
-                />
-                </Bar>
-            </BarChart>
-            </ResponsiveContainer>
-        </div>
-        </div>
-    </div>
-    );
-}
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+        <XAxis dataKey="rating" stroke="#6b7280" />
+        <YAxis stroke="#6b7280" />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: "#ffffff",
+            borderColor: "#e5e7eb",
+            color: "#374151"
+          }}
+          labelStyle={{ color: "#374151" }}
+        />
+        <Legend wrapperStyle={{ color: "#374151" }} />
+        <Bar dataKey="count" name="Problems Solved" fill="#000000" />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+};
+
+export default RatingWiseBarChart;

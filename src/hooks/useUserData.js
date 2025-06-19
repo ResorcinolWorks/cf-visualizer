@@ -137,5 +137,5 @@ export default function useUserData(handle) {
     };
   }, [handle]);
 
-  return { user, loading, error };
+  return { data: user, isLoading: loading, error };
 }

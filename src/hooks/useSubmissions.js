@@ -117,5 +117,5 @@ export default function useSubmissions(handle) {
     };
   }, [handle]);
 
-  return { submissions, loading, error };
+  return { data: submissions, isLoading: loading, error };
 }

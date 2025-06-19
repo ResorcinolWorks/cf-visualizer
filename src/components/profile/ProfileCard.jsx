@@ -1,3 +1,11 @@
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { FaUserCircle, FaMedal } from "react-icons/fa";
 import { HiLightningBolt } from "react-icons/hi";
 import { MdStars } from "react-icons/md";
@@ -26,122 +34,49 @@ function getRankBadgeStyle(rank = "", rating = 0) {
 }
 
 export default function ProfileCard({ user }) {
-  if (!user) {
-    // Optionally show a skeleton or placeholder
-    return (
-      <div className="w-full max-w-2xl mx-auto p-6 rounded-xl bg-white dark:bg-gray-900 shadow-md flex flex-col items-center animate-pulse">
-        <div className="w-24 h-24 rounded-full bg-gray-200 dark:bg-gray-700 mb-4"></div>
-        <div className="h-6 w-32 bg-gray-200 dark:bg-gray-700 mb-2 rounded"></div>
-        <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 mb-2 rounded"></div>
-        <div className="h-4 w-40 bg-gray-200 dark:bg-gray-700 mb-4 rounded"></div>
-        <div className="flex gap-4">
-          <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
-          <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
-        </div>
-      </div>
-    );
-  }
+  if (!user) return null;
 
-  // Determine main color for handle, rating, and badges
-  const ratingColor = getRatingColor(user.rating);
-  const maxRatingColor = getRatingColor(user.maxRating);
-  const rankBadgeStyle = getRankBadgeStyle(user.rank, user.rating);
+  const { handle, rating, maxRating, rank, maxRank, avatar } = user;
+
+  const getRankColor = (rank) => {
+    if (rank.includes("Grandmaster")) return "text-red-500";
+    if (rank.includes("Master")) return "text-orange-500";
+    if (rank.includes("Candidate")) return "text-purple-500";
+    if (rank.includes("Expert")) return "text-blue-500";
+    if (rank.includes("Specialist")) return "text-cyan-500";
+    if (rank.includes("Pupil")) return "text-green-500";
+    return "text-gray-500";
+  };
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-6 rounded-xl bg-white dark:bg-gray-900 shadow-md flex flex-col md:flex-row items-center gap-6">
-      {/* Avatar */}
-      <div className="flex-shrink-0">
-        {user.avatar ? (
-          <img
-            src={user.avatar}
-            alt={user.handle}
-            className="w-24 h-24 rounded-full border-4"
-            style={{ borderColor: ratingColor }}
-          />
-        ) : (
-          <FaUserCircle className="w-24 h-24 text-gray-300 dark:text-gray-700" />
-        )}
-      </div>
-
-      {/* Info */}
-      <div className="flex-1 flex flex-col items-center md:items-start">
-        <div className="flex items-center gap-2">
-          <span
-            className="text-2xl font-bold"
-            style={{ color: ratingColor }}
-          >
-            {user.handle}
-          </span>
-          {user.rank && (
-            <span
-              className={`px-2 py-1 rounded text-xs font-semibold capitalize border border-gray-300 dark:border-gray-700 ${rankBadgeStyle}`}
-              style={
-                !rankBadgeStyle
-                  ? {
-                      color: "#fff",
-                      background: ratingColor,
-                      borderColor: ratingColor,
-                    }
-                  : {}
-              }
-            >
-              {user.rank}
-            </span>
-          )}
+    <Card className="w-full max-w-sm mx-auto bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+      <CardHeader className="text-center">
+        <img
+          src={avatar}
+          alt={handle}
+          className="w-24 h-24 rounded-full mx-auto mb-4 border-2 border-primary"
+        />
+        <CardTitle className="text-2xl font-bold text-gray-900">{handle}</CardTitle>
+        <p className={cn("text-lg font-semibold", getRankColor(rank))}>
+          {rank}
+        </p>
+      </CardHeader>
+      <CardContent className="grid grid-cols-2 gap-4 text-center">
+        <div>
+          <p className="text-sm text-gray-600">Rating</p>
+          <p className="text-xl font-bold text-gray-900">{rating}</p>
         </div>
-
-        <div className="flex items-center gap-2 mt-2">
-          <MdStars className="text-yellow-400" />
-          <span className="text-lg font-medium text-gray-700 dark:text-gray-200">
-            Current Rating:
-            <span
-              className="ml-1 font-bold"
-              style={{ color: ratingColor }}
-            >
-              {user.rating}
-            </span>
-          </span>
+        <div>
+          <p className="text-sm text-gray-600">Max Rating</p>
+          <p className="text-xl font-bold text-gray-900">{maxRating}</p>
         </div>
-
-        <div className="flex items-center gap-2 mt-1">
-          <FaMedal className="text-pink-500" />
-          <span className="text-gray-600 dark:text-gray-300">
-            Max Rating:
-            <span
-              className="ml-1 font-semibold"
-              style={{ color: maxRatingColor }}
-            >
-              {user.maxRating}
-            </span>
-          </span>
+        <div>
+          <p className="text-sm text-gray-600">Max Rank</p>
+          <p className={cn("text-lg font-semibold", getRankColor(maxRank))}>
+            {maxRank}
+          </p>
         </div>
-
-        <div className="flex items-center gap-2 mt-1">
-          <HiLightningBolt className="text-green-500" />
-          <span className="text-gray-600 dark:text-gray-300">
-            Max Rank:
-            <span className="ml-1 font-semibold" style={{ color: maxRatingColor }}>
-              {user.maxRank}
-            </span>
-          </span>
-        </div>
-
-        {user.organization && (
-          <div className="mt-3 text-gray-500 dark:text-gray-400 text-sm">
-            <span className="font-semibold">Organization:</span> {user.organization}
-          </div>
-        )}
-        {user.city && (
-          <div className="text-gray-500 dark:text-gray-400 text-sm">
-            <span className="font-semibold">City:</span> {user.city}
-          </div>
-        )}
-        {user.country && (
-          <div className="text-gray-500 dark:text-gray-400 text-sm">
-            <span className="font-semibold">Country:</span> {user.country}
-          </div>
-        )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import {
   PieChart,
   Pie,
@@ -6,71 +7,59 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { renderPiePercentageLabel } from "../../utils/pie-label.jsx";
+import { formatVerdictsData } from '@/utils/chart-formatters';
 
-const VERDICT_COLORS = {
-  ACCEPTED: "#10b981", // green
-  WRONG_ANSWER: "#ef4444", // red
-  TIME_LIMIT_EXCEEDED: "#f59e42", // orange
-  RUNTIME_ERROR: "#f43f5e", // rose
-  MEMORY_LIMIT_EXCEEDED: "#a21caf", // purple
-  COMPILATION_ERROR: "#6366f1", // indigo
-  IDLENESS_LIMIT_EXCEEDED: "#14b8a6", // teal
-  PARTIAL: "#facc15", // yellow
-  PRESENTATION_ERROR: "#0ea5e9", // sky
-  SKIPPED: "#64748b", // slate
-  HACKED: "#e11d48", // red-600
-  OTHER: "#6b7280", // gray
+const COLORS = {
+  "OK": "#000000", // Black
+  "WRONG_ANSWER": "#404040", // Dark Gray
+  "TIME_LIMIT_EXCEEDED": "#808080", // Medium Gray
+  "MEMORY_LIMIT_EXCEEDED": "#A0A0A0", // Light Gray
+  "RUNTIME_ERROR": "#C0C0C0", // Lighter Gray
+  "COMPILATION_ERROR": "#E0E0E0", // Very Light Gray
+  "OTHER": "#2A2A2A" // Very Dark Gray
 };
 
-function getColor(verdict) {
-  return VERDICT_COLORS[verdict] || "#6b7280";
-}
+const VerdictPie = ({ data }) => {
+  const chartData = useMemo(() => formatVerdictsData(data), [data]);
 
-export default function VerdictPie({ data }) {
-  if (!data || !data.length) {
-    return (
-      <div className="w-full h-64 flex items-center justify-center bg-white dark:bg-gray-900 rounded-xl shadow mt-6">
-        <span className="text-gray-400 dark:text-gray-600">No verdict data available.</span>
-      </div>
-    );
+  if (!chartData || chartData.length === 0) {
+    return <p className="text-center text-gray-600">No verdict data available.</p>;
   }
 
   return (
-    <div className="pb-8">
-      <ResponsiveContainer width="100%" height={260}>
-        <PieChart>
-          <Pie
-            data={data}
-            cx="50%"
-            cy="50%"
-            labelLine={false}
-            label={renderPiePercentageLabel}
-            outerRadius={80}
-            dataKey="value"
-            isAnimationActive={true}
-            stroke="#fff"
-          >
-            {data.map((entry) => (
-              <Cell key={`cell-${entry.name}`} fill={getColor(entry.name)} />
-            ))}
-          </Pie>
-          <Tooltip formatter={(value, name) => [value, name.replace(/_/g, " ")]} />
-          <Legend
-            verticalAlign="bottom"
-            height={48}
-            iconType="circle"
-            wrapperStyle={{
-              color: "#64748b",
-              fontSize: "11px",
-              marginTop: 12,
-              paddingBottom: 24,
-              width: "100%",
-              textAlign: "left",
-            }}
-          />
-        </PieChart>
-      </ResponsiveContainer>
-    </div>
+    <ResponsiveContainer width="100%" height={300}>
+      <PieChart>
+        <Tooltip
+          contentStyle={{
+            backgroundColor: "#ffffff",
+            borderColor: "#000000",
+            color: "#000000"
+          }}
+          labelStyle={{ color: "#000000" }}
+        />
+        <Legend 
+          layout="vertical" 
+          align="right" 
+          verticalAlign="middle"
+          wrapperStyle={{ color: "#374151" }}
+        />
+        <Pie
+          data={chartData}
+          cx="50%"
+          cy="50%"
+          labelLine={false}
+          outerRadius={80}
+          fill="#8884d8"
+          dataKey="value"
+          nameKey="name"
+        >
+          {chartData.map((entry) => (
+            <Cell key={`cell-${entry.name}`} fill={COLORS[entry.name] || COLORS['OTHER']} />
+          ))}
+        </Pie>
+      </PieChart>
+    </ResponsiveContainer>
   );
-}
+};
+
+export default VerdictPie;

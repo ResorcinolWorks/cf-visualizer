@@ -141,5 +141,5 @@ export default function useContests(handle) {
     };
   }, [handle]);
 
-  return { contests, ratingChanges, loading, error };
+  return { data: contests, isLoading: loading, error };
 }
